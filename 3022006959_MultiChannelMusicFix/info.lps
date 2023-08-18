@@ -1,0 +1,7 @@
+vupmod#Multi Channel Music Fix:|author#Windofxy:|gamever#100:|ver#100:|
+intro#修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题        注：当前版本会将麦克风音量误当为音乐音量，之后会修复， Mod实现原理为检测音量峰值，无需担心隐私问题:|
+lang#en:|修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题        注：当前版本会将麦克风音量误当为音乐音量，之后会修复， Mod实现原理为检测音量峰值，无需担心隐私问题#Fixed an issue where playing music could not be correctly detected when using multi-channel devices such as SteelSeries GG audio software.        Note：The current version will misinterpret the microphone volume as the music volume， which will be fixed later， the principle of Mod implementation is to detect the peak volume， without worrying about privacy issues.:|SteelSeries GG#SteelSeries GG:|
+lang#zh-Hans:|修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题        注：当前版本会将麦克风音量误当为音乐音量，之后会修复， Mod实现原理为检测音量峰值，无需担心隐私问题#修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题        注：当前版本会将麦克风音量误当为音乐音量，之后会修复， Mod实现原理为检测音量峰值，无需担心隐私问题:|SteelSeries GG#SteelSeries GG:|
+lang#zh-Hant:|修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题        注：当前版本会将麦克风音量误当为音乐音量，之后会修复， Mod实现原理为检测音量峰值，无需担心隐私问题#修復使用多聲道設備（如使用SteelSeries GG音訊軟體）時，無法正確檢測播放音樂的問題        注：當前版本會將麥克風音量誤當為音樂音量，之後會修復， Mod實現原理為檢測音量峰值，無需擔心隱私問題:|SteelSeries GG#SteelSeries GG:|
+authorid#1014178146:|
+itemid#3022006959:|
