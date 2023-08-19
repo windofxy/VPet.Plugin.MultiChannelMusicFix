@@ -34,13 +34,18 @@ namespace VPet.Plugin.MultiChannelMusicFix
             List<float> vols = new List<float>();
             using (var enumerator = new MMDeviceEnumerator())
             {
-                using (var activeDevices = enumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active)) 
+                using (var activeRenderDevices = enumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active)) 
                 {
-                    foreach (var device in activeDevices) 
+                    using (var activeCaptureDevices = enumerator.EnumAudioEndpoints(DataFlow.Capture, DeviceState.Active))
                     {
-                        using (var meter = AudioMeterInformation.FromDevice(device))
+                        var activeDevices = activeRenderDevices.Except(activeCaptureDevices,new AudioDeviceComparer());
+                        foreach (var device in activeDevices)
                         {
-                            vols.Add(meter.GetPeakValue());
+                            using (var meter = AudioMeterInformation.FromDevice(device))
+                            {
+                                vols.Add(meter.GetPeakValue());
+                                textBox.Text += device.FriendlyName + "\n";
+                            }
                         }
                     }
                 }

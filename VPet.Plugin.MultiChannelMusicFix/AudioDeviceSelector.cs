@@ -62,17 +62,21 @@ namespace VPet.Plugin.MultiChannelMusicFix
         {
             using (var enumerator = new MMDeviceEnumerator())
             {
-                using (var activeDevices = enumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active))
+                using (var activeRenderDevices = enumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active))
                 {
-                    List<float> vols = new List<float>();
-                    foreach (var device in activeDevices)
+                    using (var activeCaptureDevices = enumerator.EnumAudioEndpoints(DataFlow.Capture, DeviceState.Active))
                     {
-                        using (var meter = AudioMeterInformation.FromDevice(device))
+                        List<float> vols = new List<float>();
+                        var activeDevices = activeRenderDevices.Except(activeCaptureDevices, new AudioDeviceComparer());
+                        foreach (var device in activeDevices)
                         {
-                            vols.Add(meter.GetPeakValue());
+                            using (var meter = AudioMeterInformation.FromDevice(device))
+                            {
+                                vols.Add(meter.GetPeakValue());
+                            }
                         }
+                        return vols.Max();
                     }
-                    return vols.Max();
                 }
             }
         }
@@ -88,6 +92,19 @@ namespace VPet.Plugin.MultiChannelMusicFix
             {
                 settingWindow.Topmost = true;
             }
+        }
+    }
+
+    public class AudioDeviceComparer : IEqualityComparer<MMDevice> 
+    {
+        public bool Equals(MMDevice a, MMDevice b) 
+        {
+            return a.FriendlyName == b.FriendlyName;
+        }
+
+        public int GetHashCode(MMDevice device) 
+        {
+            return device.FriendlyName.GetHashCode();
         }
     }
 
