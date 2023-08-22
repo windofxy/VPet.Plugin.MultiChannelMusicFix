@@ -1,46 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Windows.Threading;
-using System.Threading.Tasks;
 using System.Reflection;
 using VPet_Simulator.Windows.Interface;
-using VPet_Simulator.Core;
 using System.Runtime.CompilerServices;
-using VPet_Simulator.Windows;
 using System.Windows.Controls;
-using System.Security.RightsManagement;
-using System.Threading;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Reflection.Emit;
 using CSCore.CoreAudioAPI;
+using Newtonsoft.Json;
+using System.IO;
+using System.Windows;
 
 namespace VPet.Plugin.MultiChannelMusicFix
 {
-    public class AudioDeviceSelector : MainPlugin
+    public class MultiChannelMusicFix : MainPlugin
     {
-        public override string PluginName => "AudioDeviceSelector";
+        public override string PluginName => "多声道设备音乐识别修复&麦克风音乐检测 Multi Channel Music Fix & Microphone Music Capture";
 
-        public DebugWindow settingWindow = null;
+        public IMainWindow mainWindow;
+        public SettingWindow settingWindow = null;
+        public DebugWindow debugWindow = null;
 
         public Assembly[] assemblies;
         public Assembly targetAssembly;
         public Type[] types;
         public Type targetType;
         public MethodInfo targetMethod;
-        public Single volume;
-        public MethodOperation result;
-        public IMainWindow mainWindow;
+        public MethodOperation redirectedMethod;
 
-        public AudioDeviceSelector(IMainWindow _MainWindow) : base(_MainWindow)
+        public static string pluginDirectory;
+        public static Config config = new Config();
+
+        public MultiChannelMusicFix(IMainWindow _MainWindow) : base(_MainWindow)
         {
             mainWindow = _MainWindow;
         }
 
-        public override async void LoadPlugin()
+        public override void LoadPlugin()
         {
+            SetupUI();
+            
+            pluginDirectory = GetPluginDirectory();
+            config = Config.ReadConfig(pluginDirectory);
+
+            
+            
             assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (Assembly assembly in assemblies)
             {
@@ -52,22 +57,66 @@ namespace VPet.Plugin.MultiChannelMusicFix
                 if (type.Name == "MainWindow") { targetType = type; break; }
             }
             targetMethod = targetType.GetMethod("AudioPlayingVolume");
-            result = CustomReflection.RedirectTo(targetMethod, typeof(AudioDeviceSelector).GetMethod("AudioPlayingVolume"));
+            redirectedMethod = CustomReflection.RedirectTo(targetMethod, typeof(MultiChannelMusicFix).GetMethod("AudioPlayingVolume"));
             //volume = (Single)targetMethod.Invoke(mainWindow, null);
             //ShowDebugWindow();
         }
 
-        private bool? AudioPlayingVolumeOK = null;
+        public override void Setting()
+        {
+            ShowSettingWindow();
+        }
+
+        public void SetupUI() 
+        {
+            var menuMODConfig = mainWindow.Main.ToolBar.MenuMODConfig;
+            menuMODConfig.Visibility = System.Windows.Visibility.Visible;
+            /*
+            MenuItem menuItem = new MenuItem {
+                Header = "多声道设备音乐识别修复&麦克风音乐检测 Multi Channel Music Fix & Microphone Music Capture",
+                HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center,
+            };
+            menuItem.Click += (sender, e) => { Setting(); };
+            menuMODConfig.Items.Add(menuItem);
+            */
+        }
+
+        public string GetPluginDirectory() 
+        {
+            var temp = Assembly.GetExecutingAssembly().Location;
+            temp = temp.Remove(temp.LastIndexOf('\\'));
+            temp = temp.Remove(temp.LastIndexOf('\\')) + "\\";
+            return temp;
+        }
+
         public float AudioPlayingVolume()
         {
             using (var enumerator = new MMDeviceEnumerator())
             {
-                using (var activeRenderDevices = enumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active))
+                if (!MultiChannelMusicFix.config.isCaptureMicrophone)
                 {
-                    using (var activeCaptureDevices = enumerator.EnumAudioEndpoints(DataFlow.Capture, DeviceState.Active))
+                    using (var activeRenderDevices = enumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active))
+                    {
+                        using (var activeCaptureDevices = enumerator.EnumAudioEndpoints(DataFlow.Capture, DeviceState.Active))
+                        {
+                            List<float> vols = new List<float>();
+                            var activeDevices = activeRenderDevices.Except(activeCaptureDevices, new AudioDeviceComparer());
+                            foreach (var device in activeDevices)
+                            {
+                                using (var meter = AudioMeterInformation.FromDevice(device))
+                                {
+                                    vols.Add(meter.GetPeakValue());
+                                }
+                            }
+                            return vols.Max();
+                        }
+                    }
+                }
+                else 
+                {
+                    using (var activeDevices = enumerator.EnumAudioEndpoints(DataFlow.All, DeviceState.Active))
                     {
                         List<float> vols = new List<float>();
-                        var activeDevices = activeRenderDevices.Except(activeCaptureDevices, new AudioDeviceComparer());
                         foreach (var device in activeDevices)
                         {
                             using (var meter = AudioMeterInformation.FromDevice(device))
@@ -81,17 +130,64 @@ namespace VPet.Plugin.MultiChannelMusicFix
             }
         }
 
-        public void ShowDebugWindow()
+        public void ShowSettingWindow()
         {
             if (settingWindow == null)
             {
-                settingWindow = new DebugWindow(this);
+                settingWindow = new SettingWindow(this);
                 settingWindow.Show();
+                settingWindow.Topmost = true;
             }
             else
             {
                 settingWindow.Topmost = true;
             }
+        }
+
+        public void ShowDebugWindow()
+        {
+            if (debugWindow == null)
+            {
+                debugWindow = new DebugWindow(this);
+                debugWindow.Show();
+                debugWindow.Topmost = true;
+            }
+            else
+            {
+                debugWindow.Topmost = true;
+            }
+        }
+    }
+
+    public class Config
+    {
+        public bool isCaptureMicrophone;
+
+        public Config() 
+        {
+            isCaptureMicrophone = false;
+        }
+
+        public static Config ReadConfig(string pluginDirectory) 
+        {
+            JsonSerializer serializer = new JsonSerializer();
+            if (!File.Exists(pluginDirectory + "config.json") || File.ReadAllText(pluginDirectory + "config.json") == "")
+            {
+                StringWriter stringWriter = new StringWriter();
+                serializer.Serialize(new JsonTextWriter(stringWriter), new Config());
+                File.WriteAllText(pluginDirectory + "config.json", stringWriter.GetStringBuilder().ToString());
+                return new Config();
+            }
+            JsonReader jsonReader = new JsonTextReader(new StringReader(File.ReadAllText(pluginDirectory + "config.json")));
+            return serializer.Deserialize<Config>(jsonReader);
+        }
+
+        public void SaveConfig(string pluginDirectory) 
+        {
+            JsonSerializer serializer = new JsonSerializer();
+            StringWriter stringWriter = new StringWriter();
+            serializer.Serialize(new JsonTextWriter(stringWriter), this);
+            File.WriteAllText(pluginDirectory + "config.json", stringWriter.GetStringBuilder().ToString());
         }
     }
 

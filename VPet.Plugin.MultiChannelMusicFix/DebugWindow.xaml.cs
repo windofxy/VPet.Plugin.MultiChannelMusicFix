@@ -24,37 +24,18 @@ namespace VPet.Plugin.MultiChannelMusicFix
     /// </summary>
     public partial class DebugWindow : Window
     {
-        public AudioDeviceSelector master;
+        public MultiChannelMusicFix master;
         
-        public DebugWindow(AudioDeviceSelector _master)
+        public DebugWindow(MultiChannelMusicFix _master)
         {
             InitializeComponent();
             master = _master;
 
-            List<float> vols = new List<float>();
-            using (var enumerator = new MMDeviceEnumerator())
-            {
-                using (var activeRenderDevices = enumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active)) 
-                {
-                    using (var activeCaptureDevices = enumerator.EnumAudioEndpoints(DataFlow.Capture, DeviceState.Active))
-                    {
-                        var activeDevices = activeRenderDevices.Except(activeCaptureDevices,new AudioDeviceComparer());
-                        foreach (var device in activeDevices)
-                        {
-                            using (var meter = AudioMeterInformation.FromDevice(device))
-                            {
-                                vols.Add(meter.GetPeakValue());
-                                textBox.Text += device.FriendlyName + "\n";
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         private void Window_Closed(object sender, EventArgs e) 
         {
-            master.settingWindow = null;
+            master.debugWindow = null;
         }
     }
 }

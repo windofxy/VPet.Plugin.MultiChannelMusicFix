@@ -1,0 +1,30 @@
+﻿<Window x:Class="VPet.Plugin.MultiChannelMusicFix.SettingWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:System="clr-namespace:System;assembly=mscorlib"
+        xmlns:ll="clr-namespace:LinePutScript.Localization.WPF;assembly=LinePutScript.Localization.WPF"
+        xmlns:local="clr-namespace:VPet.Plugin.MultiChannelMusicFix" mc:Ignorable="d"
+        xmlns:pu="clr-namespace:Panuon.WPF.UI;assembly=Panuon.WPF.UI" Title="设置" Width="450" FontSize="16"
+        Height="Auto" ResizeMode="NoResize" WindowState="Normal" SizeToContent="WidthAndHeight" Closed="Window_Closed"
+        Background="{DynamicResource PrimaryLighter}">
+    <Window.Resources>
+        <ResourceDictionary Source="/VPet-Simulator.Windows.Interface;component/ResourceStyle.xaml" />
+    </Window.Resources>
+    <Grid Margin="8" Background="{DynamicResource PrimaryLighter}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="15" />
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="1*" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Row="0" Text="{ll:Str 启用麦克风采集(能让桌宠在你唱歌的时候跳舞)}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+        <pu:Switch x:Name="MicrophoneCaptureSwitch" 
+                   BorderBrush="{DynamicResource DARKPrimaryDark}"
+                   CheckedToggleBrush="{DynamicResource DARKPrimaryDark}"
+                   FontSize="14"
+                   HorizontalContentAlignment="Left"
+                   Grid.Column="2" Checked="MicrophoneCaptureSwitch_Checked" Unchecked="MicrophoneCaptureSwitch_UnChecked"/>
+    </Grid>
+</Window>
