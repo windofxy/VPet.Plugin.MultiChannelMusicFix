@@ -31,6 +31,7 @@ namespace VPet.Plugin.MultiChannelMusicFix
             InitializeComponent();
             master = _master;
 
+            //foreach (var device in MultiChannelMusicFix.activeAllDevices) { textBox.Text += device.FriendlyName + "\n"; }
         }
 
         private void Window_Closed(object sender, EventArgs e) 

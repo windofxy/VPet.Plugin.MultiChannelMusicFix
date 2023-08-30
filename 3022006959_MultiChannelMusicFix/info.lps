@@ -1,7 +1,31 @@
-vupmod#多声道设备音乐识别修复&麦克风音乐检测 Multi Channel Music Fix & Microphone Music Capture:|author#Windofxy:|gamever#100:|ver#102:|
+vupmod#多声道设备音乐识别修复&麦克风音乐检测:|author#Windofxy:|gamever#100:|ver#103:|
 intro#修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题/n增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）:|
-lang#en:|修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题/n增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）#Fixed an issue where playing music could not be correctly detected when using multi-channel devices such as SteelSeries GG audio software./nAdded the ability to detect music through the microphone (need to turn on the switch in the Mod Settings):|SteelSeries GG#SteelSeries GG:|
-lang#zh-Hans:|修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题/n增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）#修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题/n增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）:|SteelSeries GG#SteelSeries GG:|
-lang#zh-Hant:|修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题/n增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）#修復使用多聲道設備（如使用SteelSeries GG音訊軟體）時，無法正確檢測播放音樂的問題/n增加了透過麥克風檢測音樂的功能（需在Mod設置內打開開關）:|SteelSeries GG#SteelSeries GG:|
+lang#en:|:
+:多声道设备音乐识别修复&麦克风音乐检测:
+:#Multi Channel Music Fix & Microphone Music Capture:|:
+:修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题\n增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）:
+:#Fixed an issue where playing music could not be correctly detected when using multi-channel devices such as SteelSeries GG audio software.\nAdded the ability to detect music through the microphone (need to turn on the switch in the Mod Settings):|:
+:启用麦克风采集(能让桌宠在你唱歌的时候跳舞):
+:#Enable Microphone capture (let desktop pet dance while you sing):|:
+:SteelSeries GG:
+:#SteelSeries GG:|
+lang#zh-Hans:|:
+:多声道设备音乐识别修复&麦克风音乐检测:
+:#多声道设备音乐识别修复&麦克风音乐检测:|:
+:修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题\n增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）:
+:#修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题\n增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）:|:
+:启用麦克风采集(能让桌宠在你唱歌的时候跳舞):
+:#启用麦克风采集(能让桌宠在你唱歌的时候跳舞):|:
+:SteelSeries GG:
+:#SteelSeries GG:|
+lang#zh-Hant:|:
+:多声道设备音乐识别修复&麦克风音乐检测:
+:#多聲道設備音樂識別修復&麥克風音樂檢測:|:
+:修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题\n增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）:
+:#修復使用多聲道設備（如使用SteelSeries GG音訊軟體）時，無法正確檢測播放音樂的問題\n增加了透過麥克風檢測音樂的功能（需在Mod設置內打開開關）:|:
+:启用麦克风采集(能让桌宠在你唱歌的时候跳舞):
+:#啟用麥克風採集(能讓桌寵在你唱歌的時候跳舞):|:
+:SteelSeries GG:
+:#SteelSeries GG:|
 authorid#1014178146:|
 itemid#3022006959:|
