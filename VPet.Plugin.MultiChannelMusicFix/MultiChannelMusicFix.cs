@@ -11,12 +11,13 @@ using CSCore.CoreAudioAPI;
 using Newtonsoft.Json;
 using System.IO;
 using System.Windows;
+using System.Net;
 
 namespace VPet.Plugin.MultiChannelMusicFix
 {
     public class MultiChannelMusicFix : MainPlugin
     {
-        public override string PluginName => "多声道设备音乐识别修复&麦克风音乐检测 Multi Channel Music Fix & Microphone Music Capture";
+        public override string PluginName => "多声道设备音乐识别修复&麦克风音乐检测";
 
         public IMainWindow mainWindow;
         public SettingWindow settingWindow = null;
@@ -32,9 +33,15 @@ namespace VPet.Plugin.MultiChannelMusicFix
         public static string pluginDirectory;
         public static Config config = new Config();
 
+        public static MMDeviceEnumerator deviceEnumerator = null;
+        public static MMDeviceCollection activeAllDevices = null;
+        public static MMDeviceCollection activeRenderDevices = null;
+        public static MMDeviceCollection activeCaptureDevices = null;
+
         public MultiChannelMusicFix(IMainWindow _MainWindow) : base(_MainWindow)
         {
             mainWindow = _MainWindow;
+            UpdateAudioDevicesList();
         }
 
         public override void LoadPlugin()
@@ -58,12 +65,12 @@ namespace VPet.Plugin.MultiChannelMusicFix
             }
             targetMethod = targetType.GetMethod("AudioPlayingVolume");
             redirectedMethod = CustomReflection.RedirectTo(targetMethod, typeof(MultiChannelMusicFix).GetMethod("AudioPlayingVolume"));
-            //volume = (Single)targetMethod.Invoke(mainWindow, null);
             //ShowDebugWindow();
         }
 
         public override void Setting()
         {
+            UpdateAudioDevicesList();
             ShowSettingWindow();
         }
 
@@ -89,44 +96,60 @@ namespace VPet.Plugin.MultiChannelMusicFix
             return temp;
         }
 
+        public static void UpdateAudioDevicesList()
+        {
+            try
+            {
+                deviceEnumerator = new MMDeviceEnumerator();
+                activeAllDevices = deviceEnumerator.EnumAudioEndpoints(DataFlow.All, DeviceState.Active);
+                activeRenderDevices = deviceEnumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active);
+                activeCaptureDevices = deviceEnumerator.EnumAudioEndpoints(DataFlow.Capture, DeviceState.Active);
+            }
+            finally { }
+        }
+
         public float AudioPlayingVolume()
         {
-            using (var enumerator = new MMDeviceEnumerator())
+            if (!MultiChannelMusicFix.config.isCaptureMicrophone)
             {
-                if (!MultiChannelMusicFix.config.isCaptureMicrophone)
+                List<float> vols = new List<float>();
+                var activeDevices = MultiChannelMusicFix.activeRenderDevices.Except(MultiChannelMusicFix.activeCaptureDevices, new AudioDeviceComparer());
+                foreach (var device in activeDevices)
                 {
-                    using (var activeRenderDevices = enumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active))
+                    try
                     {
-                        using (var activeCaptureDevices = enumerator.EnumAudioEndpoints(DataFlow.Capture, DeviceState.Active))
+                        using (var meter = AudioMeterInformation.FromDevice(device))
                         {
-                            List<float> vols = new List<float>();
-                            var activeDevices = activeRenderDevices.Except(activeCaptureDevices, new AudioDeviceComparer());
-                            foreach (var device in activeDevices)
-                            {
-                                using (var meter = AudioMeterInformation.FromDevice(device))
-                                {
-                                    vols.Add(meter.GetPeakValue());
-                                }
-                            }
-                            return vols.Max();
+                            vols.Add(meter.GetPeakValue());
                         }
                     }
-                }
-                else 
-                {
-                    using (var activeDevices = enumerator.EnumAudioEndpoints(DataFlow.All, DeviceState.Active))
+                    catch
                     {
-                        List<float> vols = new List<float>();
-                        foreach (var device in activeDevices)
-                        {
-                            using (var meter = AudioMeterInformation.FromDevice(device))
-                            {
-                                vols.Add(meter.GetPeakValue());
-                            }
-                        }
-                        return vols.Max();
+                        vols.Add(0f);
                     }
                 }
+                vols.Add(0f);
+                return vols.Max();
+            }
+            else 
+            {
+                List<float> vols = new List<float>();
+                foreach (var device in MultiChannelMusicFix.activeAllDevices)
+                {
+                    try
+                    {
+                        using (var meter = AudioMeterInformation.FromDevice(device))
+                        {
+                            vols.Add(meter.GetPeakValue());
+                        }
+                    }
+                    catch 
+                    {
+                        vols.Add(0f);
+                    }
+                }
+                vols.Add(0f);
+                return vols.Max();
             }
         }
 
