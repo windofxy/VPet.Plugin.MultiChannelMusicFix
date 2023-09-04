@@ -1,0 +1,39 @@
+[V1.0.4] 多声道设备音乐识别修复&麦克风音乐检测
+
+[V1.0.4] Multi Channel Music Fix & Microphone Music Capture
+
+功能：
+修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题
+增加了通过麦克风检测音乐的功能，让桌宠在你唱歌时开始跳舞（需在Mod设置内打开开关）
+
+Features:
+Fixed an issue where playing music could not be correctly detected when using multi-channel devices such as SteelSeries GG audio software.
+Added the ability to detect music through the microphone. Let the table pet start dancing while you sing (need to turn on the switch in the Mod Settings)
+
+更新日志:
+[v1.0.4]
+修复游戏更新后Newtonsoft.Json缺失导致报错的问题
+
+[V1.0.3]
+提高了程序运行效率
+添加了本地化翻译
+
+[V1.0.2]
+增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）
+
+[V1.0.1]
+修复了会采集麦克风音量的问题
+
+Update log:
+[V1.0.4]
+Fixed an issue where Newtonsoft.Json was missing after the game update
+
+[V1.0.3]
+Improved the efficiency of program
+Added localized translation
+
+[V1.0.2]
+Added the ability to detect music through the microphone (need to turn on the switch in the Mod Settings)
+
+[V1.0.1]
+Fixed an issue where microphone volume would be collected
