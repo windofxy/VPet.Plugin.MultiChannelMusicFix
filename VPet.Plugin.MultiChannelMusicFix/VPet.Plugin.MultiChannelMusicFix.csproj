@@ -26,6 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CSCore" Version="1.2.1.2" />
+    <PackageReference Include="Lib.Harmony" Version="2.3.3" />
     <PackageReference Include="LinePutScript" Version="1.11.6" />
     <PackageReference Include="LinePutScript.Localization.WPF" Version="1.0.6" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

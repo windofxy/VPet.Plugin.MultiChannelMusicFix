@@ -12,6 +12,8 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Windows;
 using System.Net;
+using HarmonyLib;
+using System.Windows.Controls.Primitives;
 
 namespace VPet.Plugin.MultiChannelMusicFix
 {
@@ -28,7 +30,6 @@ namespace VPet.Plugin.MultiChannelMusicFix
         public Type[] types;
         public Type targetType;
         public MethodInfo targetMethod;
-        public MethodOperation redirectedMethod;
 
         public static string pluginDirectory;
         public static Config config = new Config();
@@ -38,21 +39,22 @@ namespace VPet.Plugin.MultiChannelMusicFix
         public static MMDeviceCollection activeRenderDevices = null;
         public static MMDeviceCollection activeCaptureDevices = null;
 
+        Harmony harmony = new Harmony("com.vpet.plugin.multichannelmusicfix");
+
         public MultiChannelMusicFix(IMainWindow _MainWindow) : base(_MainWindow)
         {
             mainWindow = _MainWindow;
-            UpdateAudioDevicesList();
         }
 
         public override void LoadPlugin()
         {
             SetupUI();
-            
+
+            UpdateAudioDevicesList();
+
             pluginDirectory = GetPluginDirectory();
             config = Config.ReadConfig(pluginDirectory);
 
-            
-            
             assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (Assembly assembly in assemblies)
             {
@@ -64,7 +66,9 @@ namespace VPet.Plugin.MultiChannelMusicFix
                 if (type.Name == "MainWindow") { targetType = type; break; }
             }
             targetMethod = targetType.GetMethod("AudioPlayingVolume");
-            redirectedMethod = CustomReflection.RedirectTo(targetMethod, typeof(MultiChannelMusicFix).GetMethod("AudioPlayingVolume"));
+
+            harmony.Patch(targetMethod, new HarmonyMethod(typeof(MultiChannelMusicFix).GetMethod("AudioPlayingVolumePatch")));
+
             //ShowDebugWindow();
         }
 
@@ -108,7 +112,9 @@ namespace VPet.Plugin.MultiChannelMusicFix
             finally { }
         }
 
-        public float AudioPlayingVolume()
+        [HarmonyPrefix]
+        [HarmonyPatch("AudioPlayingVolume")]
+        public static bool AudioPlayingVolumePatch(ref float __result)
         {
             if (!MultiChannelMusicFix.config.isCaptureMicrophone)
             {
@@ -129,9 +135,9 @@ namespace VPet.Plugin.MultiChannelMusicFix
                     }
                 }
                 vols.Add(0f);
-                return vols.Max();
+                __result = vols.Max();
             }
-            else 
+            else
             {
                 List<float> vols = new List<float>();
                 foreach (var device in MultiChannelMusicFix.activeAllDevices)
@@ -143,14 +149,16 @@ namespace VPet.Plugin.MultiChannelMusicFix
                             vols.Add(meter.GetPeakValue());
                         }
                     }
-                    catch 
+                    catch
                     {
                         vols.Add(0f);
                     }
                 }
                 vols.Add(0f);
-                return vols.Max();
+                __result = vols.Max();
             }
+
+            return false;
         }
 
         public void ShowSettingWindow()
@@ -224,137 +232,6 @@ namespace VPet.Plugin.MultiChannelMusicFix
         public int GetHashCode(MMDevice device) 
         {
             return device.FriendlyName.GetHashCode();
-        }
-    }
-
-    public static class CustomReflection
-    {
-        public static MethodOperation RedirectTo<T>(this MethodInfo origin, Func<T> target)
-                => RedirectTo(origin, target.Method);
-
-        public static MethodOperation RedirectTo<T, R>(this MethodInfo origin, Func<T, R> target)
-                => RedirectTo(origin, target.Method);
-
-        public static MethodOperation RedirectTo(this MethodInfo origin, MethodInfo target)
-        {
-            IntPtr ori = GetMethodAddress(origin);
-            IntPtr tar = GetMethodAddress(target);
-
-            Debug.Assert(Marshal.ReadIntPtr(ori) == origin.MethodHandle.GetFunctionPointer());
-            Debug.Assert(Marshal.ReadIntPtr(tar) == target.MethodHandle.GetFunctionPointer());
-
-            return Redirect(ori, tar);
-        }
-
-        private static void OutputMethodDetails(MethodInfo mi, IntPtr address)
-        {
-            IntPtr mt = mi.DeclaringType.TypeHandle.Value;
-            IntPtr md = mi.MethodHandle.Value;
-
-            int offset = (int)((long)mt - (long)md);
-
-            if (mi.IsVirtual)
-            {
-                offset = IntPtr.Size == 4 ? 0x28 : 0x40;
-
-                IntPtr ms = mt + offset;
-
-                long shift = Marshal.ReadInt64(md) >> 32;
-                ushort mask = 0xffff;
-                int slot = (int)(shift & mask);
-            }
-
-            offset = (int)((long)address - (long)mt);
-        }
-
-        private static IntPtr GetMethodAddress(MethodInfo mi)
-        {
-            const ushort SLOT_NUMBER_MASK = 0xffff;
-            const int MT_OFFSET_32BIT = 0x28;
-            const int MT_OFFSET_64BIT = 0x40;
-
-            IntPtr address;
-
-            RuntimeHelpers.PrepareMethod(mi.MethodHandle);
-
-            IntPtr md = mi.MethodHandle.Value;
-            IntPtr mt = mi.DeclaringType.TypeHandle.Value;
-
-            if (mi.IsVirtual)
-            {
-                int offset = IntPtr.Size == 4 ? MT_OFFSET_32BIT : MT_OFFSET_64BIT;
-
-                IntPtr ms = Marshal.ReadIntPtr(mt + offset);
-
-                long shift = Marshal.ReadInt64(md) >> 32;
-                int slot = (int)(shift & SLOT_NUMBER_MASK);
-
-                address = ms + (slot * IntPtr.Size);
-            }
-            else
-            {
-                address = md + 8;
-            }
-
-            return address;
-        }
-
-        private static MethodRedirection Redirect(IntPtr ori, IntPtr tar)
-        {
-            var token = new MethodRedirection(ori);
-            Marshal.Copy(new IntPtr[] { Marshal.ReadIntPtr(tar) }, 0, ori, 1);
-
-            return token;
-        }
-    }
-    public abstract class MethodOperation : IDisposable
-    {
-        public abstract void Restore();
-
-        public void Dispose()
-        {
-            Restore();
-        }
-    }
-
-    public class MethodRedirection : MethodOperation
-    {
-        public MethodToken Origin { get; private set; }
-
-        public MethodRedirection(IntPtr address)
-        {
-            Origin = new MethodToken(address);
-        }
-
-        public override void Restore()
-        {
-            Origin.Restore();
-        }
-
-        public override string ToString()
-        {
-            return Origin.ToString();
-        }
-    }
-    public struct MethodToken : IDisposable
-    {
-        public IntPtr Address { get; private set; }
-        public IntPtr Value { get; private set; }
-
-        public MethodToken(IntPtr address)
-        {
-            Address = address;
-            Value = Marshal.ReadIntPtr(address);
-        }
-
-        public void Restore()
-        {
-            Marshal.Copy(new IntPtr[] { Value }, 0, Address, 1);
-        }
-
-        public void Dispose()
-        {
-            Restore();
         }
     }
 }
