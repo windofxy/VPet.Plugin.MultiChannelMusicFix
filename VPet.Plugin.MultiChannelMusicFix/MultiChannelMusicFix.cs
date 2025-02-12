@@ -14,6 +14,7 @@ using System.Windows;
 using System.Net;
 using HarmonyLib;
 using System.Windows.Controls.Primitives;
+using LinePutScript.Localization.WPF;
 
 namespace VPet.Plugin.MultiChannelMusicFix
 {
@@ -35,7 +36,6 @@ namespace VPet.Plugin.MultiChannelMusicFix
         public static Config config = new Config();
 
         public static MMDeviceEnumerator deviceEnumerator = null;
-        public static MMDeviceCollection activeAllDevices = null;
         public static MMDeviceCollection activeRenderDevices = null;
         public static MMDeviceCollection activeCaptureDevices = null;
 
@@ -51,7 +51,7 @@ namespace VPet.Plugin.MultiChannelMusicFix
             SetupUI();
 
             UpdateAudioDevicesList();
-
+            
             pluginDirectory = GetPluginDirectory();
             config = Config.ReadConfig(pluginDirectory);
 
@@ -69,7 +69,16 @@ namespace VPet.Plugin.MultiChannelMusicFix
 
             harmony.Patch(targetMethod, new HarmonyMethod(typeof(MultiChannelMusicFix).GetMethod("AudioPlayingVolumePatch")));
 
-            //ShowDebugWindow();
+            if (string.IsNullOrWhiteSpace(config.SelectedSpeakerDeviceId) || (config.IsCaptureMicrophone == true && string.IsNullOrWhiteSpace(config.SelectedMicrophoneDeviceId)))
+            {
+                MessageBox.Show(LocalizeCore.Translate("还未选择采集设备，请前往MOD设置界面进行设置"), "VPet.Plugin.MultiChannelMusicFix", MessageBoxButton.OK);
+            }
+
+            config.SaveConfig(pluginDirectory);
+
+#if DEBUG
+            ShowDebugWindow();
+#endif
         }
 
         public override void Setting()
@@ -80,8 +89,7 @@ namespace VPet.Plugin.MultiChannelMusicFix
 
         public void SetupUI() 
         {
-            var menuMODConfig = mainWindow.Main.ToolBar.MenuMODConfig;
-            menuMODConfig.Visibility = System.Windows.Visibility.Visible;
+            mainWindow.Main.ToolBar.MenuMODConfig.Visibility = System.Windows.Visibility.Visible;
             /*
             MenuItem menuItem = new MenuItem {
                 Header = "多声道设备音乐识别修复&麦克风音乐检测 Multi Channel Music Fix & Microphone Music Capture",
@@ -105,9 +113,10 @@ namespace VPet.Plugin.MultiChannelMusicFix
             try
             {
                 deviceEnumerator = new MMDeviceEnumerator();
-                activeAllDevices = deviceEnumerator.EnumAudioEndpoints(DataFlow.All, DeviceState.Active);
-                activeRenderDevices = deviceEnumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active);
                 activeCaptureDevices = deviceEnumerator.EnumAudioEndpoints(DataFlow.Capture, DeviceState.Active);
+                SettingWindow.MicroPhones = null;
+                activeRenderDevices = deviceEnumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active);
+                SettingWindow.Speakers = null;
             }
             finally { }
         }
@@ -116,17 +125,36 @@ namespace VPet.Plugin.MultiChannelMusicFix
         [HarmonyPatch("AudioPlayingVolume")]
         public static bool AudioPlayingVolumePatch(ref float __result)
         {
-            if (!MultiChannelMusicFix.config.isCaptureMicrophone)
+            List<float> vols = new List<float>();
+            var activeDevices = activeRenderDevices.Except(activeCaptureDevices, new AudioDeviceComparer());
+            foreach (var device in activeDevices)
             {
-                List<float> vols = new List<float>();
-                var activeDevices = MultiChannelMusicFix.activeRenderDevices.Except(MultiChannelMusicFix.activeCaptureDevices, new AudioDeviceComparer());
-                foreach (var device in activeDevices)
+                if(device.DeviceID != config.SelectedSpeakerDeviceId) { continue; }
+                try
                 {
+                    using (var meter = AudioMeterInformation.FromDevice(device))
+                    {
+                        vols.Add(meter.GetPeakValue() * (float)config.SpeakerCaptureVolumeMultiplier);
+                    }
+                }
+                catch
+                {
+                    vols.Add(0f);
+                }
+            }
+
+            vols.Add(0f);
+
+            if (config.IsCaptureMicrophone)
+            {
+                foreach (var device in activeCaptureDevices)
+                {
+                    if (device.DeviceID != config.SelectedMicrophoneDeviceId) { continue; }
                     try
                     {
                         using (var meter = AudioMeterInformation.FromDevice(device))
                         {
-                            vols.Add(meter.GetPeakValue());
+                            vols.Add(meter.GetPeakValue() * (float)config.MicrophoneCaptureVolumeMultiplier);
                         }
                     }
                     catch
@@ -135,28 +163,9 @@ namespace VPet.Plugin.MultiChannelMusicFix
                     }
                 }
                 vols.Add(0f);
-                __result = vols.Max();
             }
-            else
-            {
-                List<float> vols = new List<float>();
-                foreach (var device in MultiChannelMusicFix.activeAllDevices)
-                {
-                    try
-                    {
-                        using (var meter = AudioMeterInformation.FromDevice(device))
-                        {
-                            vols.Add(meter.GetPeakValue());
-                        }
-                    }
-                    catch
-                    {
-                        vols.Add(0f);
-                    }
-                }
-                vols.Add(0f);
-                __result = vols.Max();
-            }
+
+            __result = vols.Max();
 
             return false;
         }
@@ -190,35 +199,106 @@ namespace VPet.Plugin.MultiChannelMusicFix
         }
     }
 
+    [Serializable]
     public class Config
     {
-        public bool isCaptureMicrophone;
+        private bool isCaptureMicrophone = false;
+        private double speakerCaptureVolumeMultiplier = 1f;
+        private double microphoneCaptureVolumeMultiplier = 1f;
+        private string selectedSpeakerDeviceId = "";
+        private string selectedMicrophoneDeviceId = "";
 
-        public Config() 
+        public bool IsCaptureMicrophone
         {
-            isCaptureMicrophone = false;
+            get { return isCaptureMicrophone; }
+            set { isCaptureMicrophone = value; }
+        }
+
+        public double SpeakerCaptureVolumeMultiplier
+        {
+            get { return speakerCaptureVolumeMultiplier; }
+            set { speakerCaptureVolumeMultiplier = value; }
+        }
+
+        public double MicrophoneCaptureVolumeMultiplier
+        {
+            get { return microphoneCaptureVolumeMultiplier; }
+            set { microphoneCaptureVolumeMultiplier = value; }
+        }
+
+        public string SelectedSpeakerDeviceId
+        {
+            get { return selectedSpeakerDeviceId; }
+            set { selectedSpeakerDeviceId = value; }
+        }
+
+        public string SelectedMicrophoneDeviceId
+        {
+            get { return selectedMicrophoneDeviceId; }
+            set { selectedMicrophoneDeviceId = value; }
+        }
+
+        private static JsonSerializerSettings jsonSerializerSettings = null;
+
+        public static JsonSerializerSettings JsonSerializerSettings
+        {
+            get
+            {
+                if (jsonSerializerSettings == null)
+                {
+                    jsonSerializerSettings = new JsonSerializerSettings();
+                    jsonSerializerSettings.Formatting = Formatting.Indented;
+                    jsonSerializerSettings.MissingMemberHandling = MissingMemberHandling.Ignore;
+                    jsonSerializerSettings.DefaultValueHandling = DefaultValueHandling.Include;
+                    JsonSerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                }
+                return jsonSerializerSettings;
+            }
         }
 
         public static Config ReadConfig(string pluginDirectory) 
         {
-            JsonSerializer serializer = new JsonSerializer();
-            if (!File.Exists(pluginDirectory + "config.json") || File.ReadAllText(pluginDirectory + "config.json") == "")
+            try
             {
-                StringWriter stringWriter = new StringWriter();
-                serializer.Serialize(new JsonTextWriter(stringWriter), new Config());
-                File.WriteAllText(pluginDirectory + "config.json", stringWriter.GetStringBuilder().ToString());
+                if (!File.Exists(pluginDirectory + "config.json") || File.ReadAllText(pluginDirectory + "config.json") == "")
+                {
+                    File.WriteAllText(pluginDirectory + "config.json", JsonConvert.SerializeObject(new Config(), JsonSerializerSettings));
+                    return new Config();
+                }
+                Config temp = JsonConvert.DeserializeObject<Config>(File.ReadAllText(pluginDirectory + "config.json"));
+                if(temp == null) temp = new Config();
+                if (!MultiChannelMusicFix.activeRenderDevices.Except(MultiChannelMusicFix.activeCaptureDevices, new AudioDeviceComparer()).Any((device) => { return device.DeviceID == temp.selectedSpeakerDeviceId; }))
+                {
+                    temp.selectedSpeakerDeviceId = "";
+                }
+                if (!MultiChannelMusicFix.activeCaptureDevices.Any((device) => { return device.DeviceID == temp.selectedMicrophoneDeviceId; }))
+                {
+                    temp.selectedMicrophoneDeviceId = "";
+                }
+                return temp;
+            }
+            catch (JsonException e)
+            {
+                MessageBox.Show(string.Format("配置文件解析失败，将还原到默认值\n错误信息: \n{0}", e.Message + "\n" + e.StackTrace), "VPet.Plugin.MultiChannelMusicFix", MessageBoxButton.OK);
                 return new Config();
             }
-            JsonReader jsonReader = new JsonTextReader(new StringReader(File.ReadAllText(pluginDirectory + "config.json")));
-            return serializer.Deserialize<Config>(jsonReader);
+            catch (Exception e)
+            {
+                MessageBox.Show(string.Format("配置文件读取失败，将还原到默认值\n错误信息: \n{0}", e.Message + "\n" + e.StackTrace), "VPet.Plugin.MultiChannelMusicFix", MessageBoxButton.OK);
+                return new Config();
+            }
         }
 
         public void SaveConfig(string pluginDirectory) 
         {
-            JsonSerializer serializer = new JsonSerializer();
-            StringWriter stringWriter = new StringWriter();
-            serializer.Serialize(new JsonTextWriter(stringWriter), this);
-            File.WriteAllText(pluginDirectory + "config.json", stringWriter.GetStringBuilder().ToString());
+            try
+            {
+                File.WriteAllText(pluginDirectory + "config.json", JsonConvert.SerializeObject(this, JsonSerializerSettings));
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(string.Format("配置文件保存失败，请检查程序写入权限\n错误信息: \n{0}", e.Message + "\n" + e.StackTrace), "VPet.Plugin.MultiChannelMusicFix", MessageBoxButton.OK);
+            }
         }
     }
 

@@ -1,14 +1,26 @@
-vupmod#多声道设备音乐识别修复&麦克风音乐检测:|author#Windofxy:|gamever#11000:|ver#10501:|
+vupmod#多声道设备音乐识别修复&麦克风音乐检测:|author#Windofxy:|gamever#11048:|ver#10600:|
 intro#修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题/n增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）:|
+authorid#1014178146:|
+itemid#3022006959:|
 lang#en:|:
 :多声道设备音乐识别修复&麦克风音乐检测:
 :#Multi Channel Music Fix & Microphone Music Capture:|:
 :修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题\n增加了通过麦克风检测音乐的功能（需在Mod设置内打开开关）:
 :#Fixed an issue where playing music could not be correctly detected when using multi-channel devices such as SteelSeries GG audio software.\nAdded the ability to detect music through the microphone (need to turn on the switch in the Mod Settings):|:
 :启用麦克风采集(能让桌宠在你唱歌的时候跳舞):
-:#Enable Microphone capture (let desktop pet dance while you sing):|:
+:#Enable Microphone capture (Let VPet dance while you sing):|:
 :SteelSeries GG:
-:#SteelSeries GG:|
+:#SteelSeries GG:|:
+:还未选择采集设备，请前往MOD设置界面进行设置:
+:#Capture device not selected, please go to Mod Settings!:|:
+:采集扬声器:
+:#Speaker Capture Device:|:
+:采集麦克风:
+:#Microphone Capture Device:|:
+:扬声器采集灵敏度:
+:#Speaker Capture Volume Multiplier:|:
+:麦克风采集灵敏度:
+:#Microphone Capture Volume Multiplier:|
 lang#zh-Hans:|:
 :多声道设备音乐识别修复&麦克风音乐检测:
 :#多声道设备音乐识别修复&麦克风音乐检测:|:
@@ -17,7 +29,17 @@ lang#zh-Hans:|:
 :启用麦克风采集(能让桌宠在你唱歌的时候跳舞):
 :#启用麦克风采集(能让桌宠在你唱歌的时候跳舞):|:
 :SteelSeries GG:
-:#SteelSeries GG:|
+:#SteelSeries GG:|:
+:还未选择采集设备，请前往MOD设置界面进行设置:
+:#还未选择采集设备，请前往MOD设置界面进行设置:|:
+:采集扬声器:
+:#采集扬声器:|:
+:采集麦克风:
+:#采集麦克风:|:
+:扬声器采集灵敏度:
+:#扬声器采集灵敏度:|:
+:麦克风采集灵敏度:
+:#麦克风采集灵敏度:|
 lang#zh-Hant:|:
 :多声道设备音乐识别修复&麦克风音乐检测:
 :#多聲道設備音樂識別修復&麥克風音樂檢測:|:
@@ -26,6 +48,14 @@ lang#zh-Hant:|:
 :启用麦克风采集(能让桌宠在你唱歌的时候跳舞):
 :#啟用麥克風採集(能讓桌寵在你唱歌的時候跳舞):|:
 :SteelSeries GG:
-:#SteelSeries GG:|
-authorid#1014178146:|
-itemid#3022006959:|
+:#SteelSeries GG:|:
+:还未选择采集设备，请前往MOD设置界面进行设置:
+:#還未選擇采集設備，請前往MOD設置界面進行設置:|:
+:采集扬声器:
+:#采集揚聲器:|:
+:采集麦克风:
+:#采集麥克風:|:
+:扬声器采集灵敏度:
+:#揚聲器采集靈敏度:|:
+:麦克风采集灵敏度:
+:#麥克風采集靈敏度:|

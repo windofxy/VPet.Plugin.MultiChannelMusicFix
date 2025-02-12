@@ -1,4 +1,6 @@
 packages
 .vs
+.editorconfig
 bin
 obj
+

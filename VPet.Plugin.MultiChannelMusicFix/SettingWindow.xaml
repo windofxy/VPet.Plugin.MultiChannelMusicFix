@@ -7,7 +7,9 @@
         xmlns:local="clr-namespace:VPet.Plugin.MultiChannelMusicFix" mc:Ignorable="d"
         xmlns:pu="clr-namespace:Panuon.WPF.UI;assembly=Panuon.WPF.UI" Title="设置" Width="450" FontSize="16"
         Height="Auto" ResizeMode="NoResize" WindowState="Normal" SizeToContent="WidthAndHeight" Closed="Window_Closed"
-        Background="{DynamicResource PrimaryLighter}">
+        Background="{DynamicResource PrimaryLighter}"
+        x:Name="_this"
+        DataContext="{Binding}">
     <Window.Resources>
         <ResourceDictionary Source="/VPet-Simulator.Windows.Interface;component/ResourceStyle.xaml" />
     </Window.Resources>
@@ -18,13 +20,89 @@
             <ColumnDefinition Width="3*" />
             <ColumnDefinition Width="1*" />
         </Grid.ColumnDefinitions>
-        <TextBlock Grid.Row="0" Text="{ll:Str 启用麦克风采集(能让桌宠在你唱歌的时候跳舞)}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <Grid.RowDefinitions>
+            <RowDefinition Tag="0" x:Name="RowDefinition_Speaker_Title"/>
+            <RowDefinition Tag="1" x:Name="RowDefinition_Speaker_ComboBox"/>
+            <RowDefinition Tag="2" x:Name="RowDefinition_SpeakerCaptureVolumeMultiplier_Title"/>
+            <RowDefinition Tag="3" x:Name="RowDefinition_SpeakerCaptureVolumeMultiplier_Slider"/>
+            <RowDefinition Tag="4" x:Name="RowDefinition_MicrophoneCaptureSwitch"/>
+            <RowDefinition Tag="5" x:Name="RowDefinition_Microphone_Title"/>
+            <RowDefinition Tag="6" x:Name="RowDefinition_Microphone_ComboBox"/>
+            <RowDefinition Tag="7" x:Name="RowDefinition_MicrophoneCaptureVolumeMultiplier_Title"/>
+            <RowDefinition Tag="8" x:Name="RowDefinition_MicrophoneCaptureVolumeMultiplier_Slider"/>
+        </Grid.RowDefinitions>
+        
+        <TextBlock Grid.Row="{Binding ElementName=RowDefinition_Speaker_Title, Path=Tag}" Text="{ll:Str 采集扬声器}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+        <ComboBox x:Name="ComboBox_Speaker"
+                  Grid.Row="{Binding ElementName=RowDefinition_Speaker_ComboBox, Path=Tag}"
+                  IsEditable="False"
+                  IsReadOnly="True"
+                  DataContext="{Binding ElementName=_this}"
+                  ItemsSource="{Binding Path=Speakers, Mode=OneWay}"
+                  DisplayMemberPath="Name"
+                  SelectionChanged="ComboBox_Speaker_SelectionChanged">
+        </ComboBox>
 
+        <TextBlock Grid.Row="{Binding ElementName=RowDefinition_SpeakerCaptureVolumeMultiplier_Title, Path=Tag}" Text="{ll:Str 扬声器采集灵敏度}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+        <Slider x:Name="Slider_SpeakerCaptureVolumeMultiplier"
+                Grid.Column="0"
+                Grid.ColumnSpan="4"
+                Grid.Row="{Binding ElementName=RowDefinition_SpeakerCaptureVolumeMultiplier_Slider, Path=Tag}"
+                Minimum="0"
+                Maximum="10"
+                TickFrequency="0.01"
+                LargeChange="0.25"
+                SmallChange="0.01"
+                IsSnapToTickEnabled="True"
+                Value="{Binding Source={x:Static local:MultiChannelMusicFix.config}, Path=SpeakerCaptureVolumeMultiplier, Mode=TwoWay}"
+                ValueChanged="Slider_SpeakerCaptureVolumeMultiplier_ValueChanged"
+                Loaded="Slider_SpeakerCaptureVolumeMultiplier_Loaded"/>
+        <TextBlock x:Name="TextBlock_SpeakerCaptureVolumeMultiplier"
+                   Grid.Column="2"
+                   Grid.Row="{Binding ElementName=RowDefinition_SpeakerCaptureVolumeMultiplier_Title, Path=Tag}"
+                   Text="x1.00">
+        </TextBlock>
+
+
+        <TextBlock Grid.Row="{Binding ElementName=RowDefinition_MicrophoneCaptureSwitch, Path=Tag}" Text="{ll:Str 启用麦克风采集(能让桌宠在你唱歌的时候跳舞)}" HorizontalAlignment="Left" VerticalAlignment="Center" />
         <pu:Switch x:Name="MicrophoneCaptureSwitch" 
+                   Grid.Row="{Binding ElementName=RowDefinition_MicrophoneCaptureSwitch, Path=Tag}"
                    BorderBrush="{DynamicResource DARKPrimaryDark}"
                    CheckedToggleBrush="{DynamicResource DARKPrimaryDark}"
                    FontSize="14"
                    HorizontalContentAlignment="Left"
-                   Grid.Column="2" Checked="MicrophoneCaptureSwitch_Checked" Unchecked="MicrophoneCaptureSwitch_UnChecked"/>
+                   Grid.Column="2" Checked="MicrophoneCaptureSwitch_Checked" Unchecked="MicrophoneCaptureSwitch_UnChecked"
+                   IsThreeState="False"
+                   IsChecked="{Binding Source={x:Static local:MultiChannelMusicFix.config}, Path=IsCaptureMicrophone, Mode=TwoWay}"/>
+
+        <TextBlock Grid.Row="{Binding ElementName=RowDefinition_Microphone_Title, Path=Tag}" Text="{ll:Str 采集麦克风}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+        <ComboBox x:Name="ComboBox_Microphones"
+                  Grid.Row="{Binding ElementName=RowDefinition_Microphone_ComboBox, Path=Tag}"
+                  IsEditable="False"
+                  IsReadOnly="True"
+                  DataContext="{Binding ElementName=_this}"
+                  ItemsSource="{Binding Path=MicroPhones, Mode=OneWay}"
+                  DisplayMemberPath="Name"
+                  SelectionChanged="ComboBox_Microphones_SelectionChanged">
+        </ComboBox>
+
+        <TextBlock Grid.Row="{Binding ElementName=RowDefinition_MicrophoneCaptureVolumeMultiplier_Title, Path=Tag}" Text="{ll:Str 麦克风采集灵敏度}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+        <Slider x:Name="Slider_MicrophoneCaptureVolumeMultiplier"
+                Grid.Column="0"
+                Grid.ColumnSpan="4"
+                Grid.Row="{Binding ElementName=RowDefinition_MicrophoneCaptureVolumeMultiplier_Slider, Path=Tag}"
+                Minimum="0"
+                Maximum="10"
+                TickFrequency="0.01"
+                LargeChange="0.25"
+                SmallChange="0.01"
+                IsSnapToTickEnabled="True"
+                Value="{Binding Source={x:Static local:MultiChannelMusicFix.config}, Path=MicrophoneCaptureVolumeMultiplier, Mode=TwoWay}"
+                ValueChanged="Slider_MicrophoneCaptureVolumeMultiplier_ValueChanged"
+                Loaded="Slider_MicrophoneCaptureVolumeMultiplier_Loaded"/>
+        <TextBlock x:Name="TextBlock_MicrophoneCaptureVolumeMultiplier"
+                   Grid.Column="2"
+                   Grid.Row="{Binding ElementName=RowDefinition_MicrophoneCaptureVolumeMultiplier_Title, Path=Tag}"
+                   Text="x1.00"></TextBlock>
     </Grid>
 </Window>
