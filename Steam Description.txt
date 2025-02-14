@@ -1,6 +1,6 @@
-[V1.0.6.0] 多声道设备音乐识别修复&麦克风音乐检测
+[V1.0.6.1] 多声道设备音乐识别修复&麦克风音乐检测
 
-[V1.0.6.0] Multi Channel Music Fix & Microphone Music Capture
+[V1.0.6.1] Multi Channel Music Fix & Microphone Music Capture
 
 功能：
 修复使用多声道设备(如使用SteelSeries GG音频软件)时，无法正确检测播放音乐的问题
@@ -11,6 +11,9 @@ Fixed an issue where playing music could not be correctly detected when using mu
 Added the ability to detect music through the microphone. Let the table pet start dancing while you sing (need to turn on the switch in the Mod Settings)
 
 更新日志:
+[V1.0.6.1]
+改善兼容性
+
 [V1.0.6.0]
 增加采集设备选择及灵敏度调整
 修正翻译

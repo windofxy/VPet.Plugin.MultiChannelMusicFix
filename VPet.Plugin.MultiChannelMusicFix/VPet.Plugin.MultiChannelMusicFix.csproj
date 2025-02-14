@@ -17,6 +17,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CSCore" Version="1.2.1.2" />
+    <PackageReference Include="ILRepack" Version="2.0.37">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Lib.Harmony" Version="2.3.5" />
     <PackageReference Include="LinePutScript" Version="1.11.9" />
     <PackageReference Include="LinePutScript.Localization.WPF" Version="1.0.7" />
@@ -28,4 +32,15 @@
     <PackageReference Include="VPet-Simulator.Windows.Interface" Version="1.1.0.48" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
+  <Target Name="ILRepack">
+    <Exec Command="&quot;$(ILRepack)&quot; /out:$(OutputPath)$(AssemblyName).dll $(OutputPath)$(AssemblyName).dll $(OutputPath)0Harmony.dll $(OutputPath)CSCore.dll $(OutputPath)Newtonsoft.Json.dll" />
+  </Target>
+  <Target Name="_ProjectRemoveDependencyFiles" AfterTargets="AfterBuild" DependsOnTargets="ILRepack">
+    <ItemGroup>
+      <_ProjectDependencyFile Include="$(OutputPath)0Harmony.dll" />
+      <_ProjectDependencyFile Include="$(OutputPath)CSCore.dll" />
+      <_ProjectDependencyFile Include="$(OutputPath)Newtonsoft.Json.dll" />
+    </ItemGroup>
+    <Delete Files="@(_ProjectDependencyFile)" />
+  </Target>
 </Project>
